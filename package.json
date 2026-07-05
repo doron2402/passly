@@ -6,6 +6,19 @@
   "bin": {
     "passly": "bin/passly.js"
   },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doron2402/passly.git"
+  },
+  "homepage": "https://github.com/doron2402/passly#readme",
+  "bugs": {
+    "url": "https://github.com/doron2402/passly/issues"
+  },
+  "author": "Doron Segal",
   "engines": {
     "node": ">=18"
   },
