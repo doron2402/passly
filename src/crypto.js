@@ -34,7 +34,7 @@ export function encrypt(plaintext, password) {
 }
 
 /**
- * Decrypt a passly blob. Returns RAW BYTES; callers that know an entry is text
+ * Decrypt a vaultly blob. Returns RAW BYTES; callers that know an entry is text
  * (e.g. the verifier) decode with `.toString('utf8')`. Throws on a wrong
  * password or any tampering (GCM auth failure).
  * @param {Buffer} blob
@@ -43,7 +43,7 @@ export function encrypt(plaintext, password) {
  */
 export function decrypt(blob, password) {
   if (blob.length < MAGIC.length + 1 + SALT_LEN + IV_LEN + TAG_LEN || !blob.subarray(0, 4).equals(MAGIC)) {
-    throw new Error('not a passly file (bad header)');
+    throw new Error('not a vaultly file (bad header)');
   }
   let offset = MAGIC.length + 1;
   const salt = blob.subarray(offset, offset += SALT_LEN);

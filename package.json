@@ -1,10 +1,10 @@
 {
-  "name": "passly",
+  "name": "vaultly",
   "version": "1.0.0",
   "description": "Zero-dependency command-line vault — passwords and documents as individually encrypted files, organized like folders, sealed with one master password, synced through git",
   "type": "module",
   "bin": {
-    "passly": "bin/passly.js"
+    "vaultly": "bin/vaultly.js"
   },
   "files": [
     "bin",
@@ -12,11 +12,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/doron2402/passly.git"
+    "url": "git+https://github.com/doron2402/vaultly.git"
   },
-  "homepage": "https://github.com/doron2402/passly#readme",
+  "homepage": "https://github.com/doron2402/vaultly#readme",
   "bugs": {
-    "url": "https://github.com/doron2402/passly/issues"
+    "url": "https://github.com/doron2402/vaultly/issues"
   },
   "author": "Doron Segal",
   "engines": {

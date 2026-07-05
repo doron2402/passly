@@ -4,18 +4,20 @@ import os from 'node:os';
 import { encrypt, decrypt } from './crypto.js';
 
 const EXT = '.pass';
+// Historical constant from the passly era — changing it would lock existing
+// vaults out (the verifier in config.json was encrypted against this string).
 const VERIFIER_PLAINTEXT = 'passly-verifier-v1';
 
-export function passlyHome() {
-  return process.env.PASSLY_HOME || path.join(os.homedir(), '.passly');
+export function vaultlyHome() {
+  return process.env.VAULTLY_HOME || path.join(os.homedir(), '.vaultly');
 }
 
 function storeDir() {
-  return path.join(passlyHome(), 'store');
+  return path.join(vaultlyHome(), 'store');
 }
 
 function configPath() {
-  return path.join(passlyHome(), 'config.json');
+  return path.join(vaultlyHome(), 'config.json');
 }
 
 export function isInitialized() {
@@ -24,7 +26,7 @@ export function isInitialized() {
 
 export function init(password) {
   if (isInitialized()) {
-    throw new Error(`already initialized (${passlyHome()}). Delete that directory to start over.`);
+    throw new Error(`already initialized (${vaultlyHome()}). Delete that directory to start over.`);
   }
   fs.mkdirSync(storeDir(), { recursive: true, mode: 0o700 });
   const config = {

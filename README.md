@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="passly — your secrets, neatly filed, sealed with one password" width="660"/>
+<img src="assets/logo.svg" alt="vaultly — your secrets, neatly filed, sealed with one password" width="660"/>
 
 <br/>
 
-**Passly is a zero-dependency command-line vault for passwords and private documents.**
+**Vaultly is a zero-dependency command-line vault for passwords and private documents.**
 Every secret lives as its own AES-256-GCM encrypted file, organized in folders like `aws/admin`,
 unlocked by a single master password — and because the vault is just a directory of ciphertext,
 it syncs anywhere through git.
@@ -18,56 +18,56 @@ it syncs anywhere through git.
 
 <br/>
 
-<img src="assets/demo.svg" alt="passly terminal session" width="680"/>
+<img src="assets/demo.svg" alt="vaultly terminal session" width="680"/>
 
 </div>
 
 ---
 
-## Why passly?
+## Why vaultly?
 
 - 🔐 **One password, everything sealed.** Each entry is encrypted on its own — fresh scrypt salt and IV per file, GCM-authenticated so tampering is detected. Nothing ever touches disk in plaintext.
 - 🗂 **Secrets that nest like folders.** `aws/admin`, `work/gcp/service-account` — browse them as a tree, fetch them by path.
-- 💡 **It meets you halfway.** Typo a name and passly suggests the closest matches; hit a folder and it shows you what's inside.
+- 💡 **It meets you halfway.** Typo a name and vaultly suggests the closest matches; hit a folder and it shows you what's inside.
 - ☁️ **Sync without a service.** The vault is a git repo of ciphertext — push it to a private GitHub repo and pull it on every machine you own. No server, no subscription, no trust in anyone's cloud.
 - 🪶 **Zero dependencies.** ~600 lines of Node.js and nothing in `node_modules`. Audit it over coffee.
 
 ## Install
 
 ```sh
-git clone https://github.com/admin2402/passly.git && cd passly
+git clone https://github.com/doron2402/vaultly.git && cd vaultly
 npm link          # or: npm install -g .
-passly init       # pick your master password — it encrypts everything
+vaultly init       # pick your master password — it encrypts everything
 ```
 
-The vault lives at `~/.passly` (override with `PASSLY_HOME`).
+The vault lives at `~/.vaultly` (override with `VAULTLY_HOME`).
 
 ## Usage
 
 ```sh
 # Generate, store and print a password
-passly generate aws/admin -n 24
-passly generate github/personal --no-symbols
+vaultly generate aws/admin -n 24
+vaultly generate github/personal --no-symbols
 
 # Fetch a secret — bare path works
-passly aws/admin
-passly get aws/admin -c          # copy to clipboard instead of printing
+vaultly aws/admin
+vaultly get aws/admin -c          # copy to clipboard instead of printing
 
 # Store something you already have (hidden prompt)
-passly insert stripe/live-key
+vaultly insert stripe/live-key
 
 # Store a document / file, encrypted
-passly insert aws/ssh-key -f ~/.ssh/id_rsa
+vaultly insert aws/ssh-key -f ~/.ssh/id_rsa
 
 # Browse
-passly list
-passly list aws
+vaultly list
+vaultly list aws
 
 # Delete
-passly rm github/personal
+vaultly rm github/personal
 
 # Change the master password — re-encrypts every entry with the new one
-passly passwd
+vaultly passwd
 ```
 
 ### Suggestions
@@ -75,12 +75,12 @@ passly passwd
 Typos get you close matches, and hitting a folder shows what's inside:
 
 ```
-$ passly aws/dor
-passly: nothing stored at 'aws/dor'. Did you mean:
+$ vaultly aws/dor
+vaultly: nothing stored at 'aws/dor'. Did you mean:
   aws/admin
 
-$ passly aws
-passly: 'aws' is a folder. Entries inside:
+$ vaultly aws
+vaultly: 'aws' is a folder. Entries inside:
   aws/admin
   aws/prod/root
 ```
@@ -90,23 +90,23 @@ passly: 'aws' is a folder. Entries inside:
 Create a **private** repo on GitHub, then:
 
 ```sh
-passly sync setup git@github.com:you/passly-vault.git   # one time
-passly sync                                             # commit + pull + push
-passly sync status                                      # what would sync
+vaultly sync setup git@github.com:you/vaultly-vault.git   # one time
+vaultly sync                                             # commit + pull + push
+vaultly sync status                                      # what would sync
 ```
 
 Once linked, every `generate`, `insert`, `rm` and `passwd` auto-commits locally;
-`passly sync` pushes those commits and pulls changes from other machines.
+`vaultly sync` pushes those commits and pulls changes from other machines.
 Only ciphertext ever leaves your machine — GitHub sees `.pass` blobs it can't read.
 
 On a second machine, clone the repo as your vault and use the same master password:
 
 ```sh
-git clone git@github.com:you/passly-vault.git ~/.passly
+git clone git@github.com:you/vaultly-vault.git ~/.vaultly
 ```
 
-If both machines change the same entry, `passly sync` reports the conflict and leaves
-the vault untouched — resolve it in `~/.passly` like any git conflict, then sync again.
+If both machines change the same entry, `vaultly sync` reports the conflict and leaves
+the vault untouched — resolve it in `~/.vaultly` like any git conflict, then sync again.
 
 ## Options
 
@@ -119,14 +119,14 @@ the vault untouched — resolve it in `~/.passly` like any git conflict, then sy
 
 ## Scripting
 
-Set `PASSLY_PASSWORD` to skip the master-password prompt:
+Set `VAULTLY_PASSWORD` to skip the master-password prompt:
 
 ```sh
-PASSLY_PASSWORD=... passly aws/admin
+VAULTLY_PASSWORD=... vaultly aws/admin
 ```
 
-`passly passwd` also honors `PASSLY_PASSWORD` (current password) and
-`PASSLY_NEW_PASSWORD` (new one) for non-interactive use.
+`vaultly passwd` also honors `VAULTLY_PASSWORD` (current password) and
+`VAULTLY_NEW_PASSWORD` (new one) for non-interactive use.
 
 ## Security notes
 

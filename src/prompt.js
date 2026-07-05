@@ -42,7 +42,7 @@ export function promptHidden(question) {
 }
 
 export async function getMasterPassword({ confirm = false, promptText = 'Master password: ' } = {}) {
-  if (process.env.PASSLY_PASSWORD !== undefined) return process.env.PASSLY_PASSWORD;
+  if (process.env.VAULTLY_PASSWORD !== undefined) return process.env.VAULTLY_PASSWORD;
   const password = await promptHidden(promptText);
   if (!password) throw new Error('password cannot be empty');
   if (confirm) {

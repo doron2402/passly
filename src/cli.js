@@ -6,25 +6,25 @@ import { generatePassword } from './crypto.js';
 import { getMasterPassword, promptHidden } from './prompt.js';
 import { childEnv } from './env.js';
 
-const HELP = `passly — encrypted password & document store
+const HELP = `vaultly — encrypted password & document store
 
 Usage:
-  passly init                          Set your master password (run once)
-  passly generate <name> [-n <chars>] [--no-symbols] [-c]
+  vaultly init                          Set your master password (run once)
+  vaultly generate <name> [-n <chars>] [--no-symbols] [-c]
                                        Generate, store and print a password
-  passly <name>                        Fetch a secret (same as: passly get <name>)
-  passly get <name> [-c]               Fetch a secret; -c copies instead of printing
-  passly insert <name>                 Store a secret you type in (hidden prompt)
-  passly insert <name> -f <file>       Encrypt and store a document/file
-  passly list [prefix]                 List stored entries as a tree
-  passly rm <name>                     Delete an entry
-  passly passwd                        Change the master password (re-encrypts everything)
-  passly sync setup <remote-url>       Link the vault to a GitHub repo (one time)
-  passly sync                          Commit, pull and push the encrypted vault
-  passly sync status                   Show sync state
-  passly help                          Show this help
+  vaultly <name>                        Fetch a secret (same as: vaultly get <name>)
+  vaultly get <name> [-c]               Fetch a secret; -c copies instead of printing
+  vaultly insert <name>                 Store a secret you type in (hidden prompt)
+  vaultly insert <name> -f <file>       Encrypt and store a document/file
+  vaultly list [prefix]                 List stored entries as a tree
+  vaultly rm <name>                     Delete an entry
+  vaultly passwd                        Change the master password (re-encrypts everything)
+  vaultly sync setup <remote-url>       Link the vault to a GitHub repo (one time)
+  vaultly sync                          Commit, pull and push the encrypted vault
+  vaultly sync status                   Show sync state
+  vaultly help                          Show this help
 
-Names nest with '/', e.g. passly aws/doron, passly work/github.
+Names nest with '/', e.g. vaultly aws/doron, vaultly work/github.
 Options:
   -n <chars>      Password length (default 20)
   --no-symbols    Alphanumeric passwords only
@@ -32,7 +32,7 @@ Options:
   -f <file>       Read the secret's content from a file
 
 Secrets live as individually encrypted files (AES-256-GCM, scrypt) under
-${store.passlyHome()}. Set PASSLY_PASSWORD to skip the prompt in scripts.`;
+${store.vaultlyHome()}. Set VAULTLY_PASSWORD to skip the prompt in scripts.`;
 
 function parseFlags(args) {
   const flags = { symbols: true, copy: false, length: 20, file: null };
@@ -44,7 +44,7 @@ function parseFlags(args) {
     else if (a === '-c' || a === '--copy') flags.copy = true;
     else if (a === '-f' || a === '--file') flags.file = args[++i];
     else if (a === '-h' || a === '--help') flags.help = true;
-    else if (a.startsWith('-')) throw new Error(`unknown option: ${a} (try: passly help)`);
+    else if (a.startsWith('-')) throw new Error(`unknown option: ${a} (try: vaultly help)`);
     else positional.push(a);
   }
   return { flags, positional };
@@ -52,7 +52,7 @@ function parseFlags(args) {
 
 function requireInit() {
   if (!store.isInitialized()) {
-    throw new Error("no vault found. Run 'passly init' first to set your master password.");
+    throw new Error("no vault found. Run 'vaultly init' first to set your master password.");
   }
 }
 
@@ -85,7 +85,7 @@ function output(secret, { copy, label }) {
   } else {
     // Write raw bytes so binary documents come back byte-for-byte. Add a
     // trailing newline only for a human at a TTY; piped/redirected consumers
-    // (e.g. `passly get token | curl ...`) get the exact secret (fixes L-2).
+    // (e.g. `vaultly get token | curl ...`) get the exact secret (fixes L-2).
     process.stdout.write(secret);
     if (process.stdout.isTTY) process.stdout.write('\n');
   }
@@ -96,7 +96,7 @@ function printTree(entries, prefix) {
     console.log(prefix ? `no entries under '${prefix}'` : 'store is empty');
     return;
   }
-  console.log(prefix || 'passly store');
+  console.log(prefix || 'vaultly store');
   // Build nested structure from flat entry paths.
   const root = {};
   for (const entry of entries) {
@@ -123,27 +123,27 @@ function suggestFor(name) {
   }
   const suggestions = store.suggest(name);
   if (suggestions.length === 0) {
-    return `nothing stored at '${name}'. Run 'passly list' to see what you have.`;
+    return `nothing stored at '${name}'. Run 'vaultly list' to see what you have.`;
   }
   return `nothing stored at '${name}'. Did you mean:\n  ${suggestions.join('\n  ')}`;
 }
 
 async function cmdInit() {
   if (store.isInitialized()) {
-    throw new Error(`vault already exists at ${store.passlyHome()}`);
+    throw new Error(`vault already exists at ${store.vaultlyHome()}`);
   }
-  console.log('Setting up passly. Pick a master password — it encrypts everything you store.');
+  console.log('Setting up vaultly. Pick a master password — it encrypts everything you store.');
   const password = await getMasterPassword({ confirm: true, promptText: 'New master password: ' });
   store.init(password);
-  console.log(`Done. Vault created at ${store.passlyHome()}`);
-  console.log("Try: passly generate aws/doron -n 24");
+  console.log(`Done. Vault created at ${store.vaultlyHome()}`);
+  console.log("Try: vaultly generate aws/doron -n 24");
 }
 
 async function cmdGenerate(positional, flags) {
   // Canonical form is `generate <name>`. The legacy `generate password <name>`
   // is still accepted (backward compatible) by dropping a leading "password".
   if (positional[0] === 'password') positional.shift();
-  const name = store.normalizeEntry(positional[0] ?? (() => { throw new Error('usage: passly generate <name> [-n <chars>]'); })());
+  const name = store.normalizeEntry(positional[0] ?? (() => { throw new Error('usage: vaultly generate <name> [-n <chars>]'); })());
   const password = await unlock();
   const secret = generatePassword(flags.length, { symbols: flags.symbols });
   if (store.exists(name)) {
@@ -174,7 +174,7 @@ async function cmdInsert(name, flags) {
   } else {
     secret = await promptHidden(`Secret for ${entry}: `);
     if (!secret) throw new Error('secret cannot be empty');
-    if (process.env.PASSLY_PASSWORD === undefined && process.stdin.isTTY) {
+    if (process.env.VAULTLY_PASSWORD === undefined && process.stdin.isTTY) {
       const again = await promptHidden('Confirm secret: ');
       if (again !== secret) throw new Error('secrets do not match');
     }
@@ -190,13 +190,13 @@ async function cmdInsert(name, flags) {
 
 async function cmdPasswd() {
   requireInit();
-  const oldPassword = process.env.PASSLY_PASSWORD !== undefined
-    ? process.env.PASSLY_PASSWORD
+  const oldPassword = process.env.VAULTLY_PASSWORD !== undefined
+    ? process.env.VAULTLY_PASSWORD
     : await promptHidden('Current master password: ');
   if (!store.verifyPassword(oldPassword)) throw new Error('wrong master password');
   let newPassword;
-  if (process.env.PASSLY_NEW_PASSWORD !== undefined) {
-    newPassword = process.env.PASSLY_NEW_PASSWORD;
+  if (process.env.VAULTLY_NEW_PASSWORD !== undefined) {
+    newPassword = process.env.VAULTLY_NEW_PASSWORD;
   } else {
     newPassword = await promptHidden('New master password: ');
     const again = await promptHidden('Confirm new master password: ');
@@ -236,12 +236,12 @@ export async function run(argv) {
       return cmdGenerate(rest, flags);
     case 'get':
     case 'show':
-      if (!rest[0]) throw new Error('usage: passly get <name>');
+      if (!rest[0]) throw new Error('usage: vaultly get <name>');
       return cmdGet(rest[0], flags);
     case 'insert':
     case 'add':
     case 'set':
-      if (!rest[0]) throw new Error('usage: passly insert <name> [-f <file>]');
+      if (!rest[0]) throw new Error('usage: vaultly insert <name> [-f <file>]');
       return cmdInsert(rest[0], flags);
     case 'list':
     case 'ls': {
@@ -270,14 +270,14 @@ export async function run(argv) {
     case 'rm':
     case 'remove':
     case 'delete':
-      if (!rest[0]) throw new Error('usage: passly rm <name>');
+      if (!rest[0]) throw new Error('usage: vaultly rm <name>');
       return cmdRemove(rest[0]);
     case 'version':
     case '--version':
-      console.log('passly 1.0.0');
+      console.log('vaultly 1.0.0');
       return;
     default:
-      // Bare path shorthand: `passly aws/doron` fetches that entry.
+      // Bare path shorthand: `vaultly aws/doron` fetches that entry.
       return cmdGet(command, flags);
   }
 }

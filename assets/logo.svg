@@ -25,6 +25,6 @@
   <rect x="24" y="24" width="4" height="0" fill="none"/>
 
   <!-- wordmark -->
-  <text x="168" y="92" font-family="'SF Pro Display','Segoe UI',Helvetica,Arial,sans-serif" font-size="64" font-weight="800" letter-spacing="-2" fill="url(#word)">passly</text>
+  <text x="168" y="92" font-family="'SF Pro Display','Segoe UI',Helvetica,Arial,sans-serif" font-size="64" font-weight="800" letter-spacing="-2" fill="url(#word)">vaultly</text>
   <text x="172" y="124" font-family="'SF Mono','Cascadia Code',Menlo,Consolas,monospace" font-size="16" fill="#94A3B8">your secrets, neatly filed &#183; sealed with one password</text>
 </svg>

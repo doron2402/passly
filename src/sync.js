@@ -1,13 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { passlyHome } from './store.js';
+import { vaultlyHome } from './store.js';
 import { childEnv } from './env.js';
 
 function git(args) {
   // Scrub master-password env vars so git never sees them (SECURITY_AUDIT.md M-1).
-  const res = spawnSync('git', ['-C', passlyHome(), ...args], { encoding: 'utf8', env: childEnv() });
-  if (res.error) throw new Error('git is not installed — install it to use passly sync');
+  const res = spawnSync('git', ['-C', vaultlyHome(), ...args], { encoding: 'utf8', env: childEnv() });
+  if (res.error) throw new Error('git is not installed — install it to use vaultly sync');
   return res;
 }
 
@@ -20,7 +20,7 @@ function gitOrThrow(args) {
 }
 
 export function hasRepo() {
-  return fs.existsSync(path.join(passlyHome(), '.git'));
+  return fs.existsSync(path.join(vaultlyHome(), '.git'));
 }
 
 function hasChanges() {
@@ -41,13 +41,13 @@ export function autoCommit(message) {
   try {
     commitAll(message);
   } catch {
-    // ignore — next `passly sync` will pick the changes up or report the issue
+    // ignore — next `vaultly sync` will pick the changes up or report the issue
   }
 }
 
 export function setup(remoteUrl) {
   if (!remoteUrl) {
-    throw new Error('usage: passly sync setup <remote-url>\nexample: passly sync setup git@github.com:you/passly-vault.git');
+    throw new Error('usage: vaultly sync setup <remote-url>\nexample: vaultly sync setup git@github.com:you/vaultly-vault.git');
   }
   if (!hasRepo()) {
     gitOrThrow(['init', '-q']);
@@ -55,18 +55,18 @@ export function setup(remoteUrl) {
   }
   const hasOrigin = git(['remote', 'get-url', 'origin']).status === 0;
   gitOrThrow(hasOrigin ? ['remote', 'set-url', 'origin', remoteUrl] : ['remote', 'add', 'origin', remoteUrl]);
-  commitAll('passly: initial vault');
+  commitAll('vaultly: initial vault');
   gitOrThrow(['push', '-q', '-u', 'origin', 'main']);
   return remoteUrl;
 }
 
 export function sync() {
   if (!hasRepo()) {
-    throw new Error("vault is not linked to a remote yet. Run 'passly sync setup <remote-url>' first.");
+    throw new Error("vault is not linked to a remote yet. Run 'vaultly sync setup <remote-url>' first.");
   }
-  const committed = commitAll(`passly sync ${new Date().toISOString()}`);
+  const committed = commitAll(`vaultly sync ${new Date().toISOString()}`);
   if (git(['remote', 'get-url', 'origin']).status !== 0) {
-    throw new Error("no 'origin' remote configured. Run 'passly sync setup <remote-url>'.");
+    throw new Error("no 'origin' remote configured. Run 'vaultly sync setup <remote-url>'.");
   }
   const pull = git(['pull', '-q', '--rebase', 'origin', 'main']);
   if (pull.status !== 0) {
@@ -74,7 +74,7 @@ export function sync() {
     if (/CONFLICT|could not apply/i.test(detail)) {
       git(['rebase', '--abort']);
       throw new Error(
-        `sync conflict: the same entry changed here and on the remote.\nResolve it manually in ${passlyHome()} (it is a normal git repo), then run 'passly sync' again.`,
+        `sync conflict: the same entry changed here and on the remote.\nResolve it manually in ${vaultlyHome()} (it is a normal git repo), then run 'vaultly sync' again.`,
       );
     }
     throw new Error(`git pull failed: ${detail}`);
@@ -84,9 +84,9 @@ export function sync() {
 }
 
 export function status() {
-  if (!hasRepo()) return 'not set up — run: passly sync setup <remote-url>';
+  if (!hasRepo()) return 'not set up — run: vaultly sync setup <remote-url>';
   const remote = git(['remote', 'get-url', 'origin']);
-  const lines = [`vault:  ${passlyHome()}`];
+  const lines = [`vault:  ${vaultlyHome()}`];
   lines.push(`remote: ${remote.status === 0 ? remote.stdout.trim() : '(none)'}`);
   gitOrThrow(['add', '-A']);
   lines.push(hasChanges() ? 'local changes: yes (will be committed on next sync)' : 'local changes: none');

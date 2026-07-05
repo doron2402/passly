@@ -1,6 +1,6 @@
-# Passly — Security Audit & Pentest Report
+# Vaultly — Security Audit & Pentest Report
 
-**Target:** `passly` v1.0.0 (zero-dependency CLI password/document vault)
+**Target:** `vaultly` v1.0.0 (zero-dependency CLI password/document vault)
 **Date:** 2026-07-04
 **Method:** Full source review (crypto.js, store.js, sync.js, prompt.js, cli.js, bin) +
 dynamic attacks against a live vault instance (Node v22).
@@ -13,7 +13,7 @@ exploitation of a local instance I stood up myself.
 
 I could not break the cryptography, escape the vault directory, or bypass the master
 password. The defenses that matter held up under direct attack. The most serious issue is
-**not** a security break — it's **data loss**: passly silently corrupts any non-UTF-8 file
+**not** a security break — it's **data loss**: vaultly silently corrupts any non-UTF-8 file
 you store with `insert -f`, despite advertising "private documents." Fix that first.
 
 The security posture then rests on two things worth hardening: a KDF cost that is on the
@@ -34,7 +34,7 @@ Confidence tags: **[Certain]** = reproduced/verified. **[Likely]** = strong infe
 | Wrong master password | **Rejected** [Certain] via encrypt-then-verify verifier. |
 | GCM nonce reuse | **Not exploitable** [Certain]. Fresh random salt *and* IV per write, and the key is re-derived from the per-file salt — so the AES key changes with the salt. No cross-file nonce-under-same-key. |
 | Argument injection via `sync setup -<flag>` | **Blocked** [Certain]. `parseFlags` rejects unknown dash-prefixed args before they reach git. |
-| `git ext::` transport RCE via malicious remote URL | **Blocked in this environment** [Certain]. Modern git refuses `ext` transport by default (`protocol.ext.allow` unset). See L-3 — the safety currently comes from git, not passly. |
+| `git ext::` transport RCE via malicious remote URL | **Blocked in this environment** [Certain]. Modern git refuses `ext` transport by default (`protocol.ext.allow` unset). See L-3 — the safety currently comes from git, not vaultly. |
 | Biased password generation | **Sound** [Certain]. Uses `crypto.randomInt` (rejection sampling, unbiased). |
 | File permissions | **Correct** [Certain]. Vault dir `700`, store `700`, config + entries `600`. |
 
@@ -79,13 +79,13 @@ the real mitigation is (a) strong KDF, (b) a loud warning that the remote must b
 (c) enforce a minimum master-password strength at `init`.
 
 ### M-1 — Master password leaks into every child-process environment [Certain]
-**Severity: Medium.** `PASSLY_PASSWORD` / `PASSLY_NEW_PASSWORD` are read from `process.env`, and
+**Severity: Medium.** `VAULTLY_PASSWORD` / `VAULTLY_NEW_PASSWORD` are read from `process.env`, and
 every `spawnSync` (git, `pbcopy`/`clip`/`xclip`) inherits the full env by default. So the master
 password is visible in the environment of git and the clipboard helper — readable via
 `/proc/<pid>/environ`, and exfiltratable by a shimmed/compromised `git` or `xclip`.
 
 **Fix:** pass a scrubbed env to every `spawnSync`:
-`{ ...opts, env: { ...process.env, PASSLY_PASSWORD: undefined, PASSLY_NEW_PASSWORD: undefined } }`
+`{ ...opts, env: { ...process.env, VAULTLY_PASSWORD: undefined, VAULTLY_NEW_PASSWORD: undefined } }`
 (or an explicit minimal env). Children never need those vars.
 
 ### M-2 — `changePassword` re-encryption is not crash-atomic [Likely]
@@ -104,24 +104,24 @@ managers. **Fix:** clear after a timeout (e.g. 30–45 s) and/or warn. Also only
 supported on Linux — Wayland/`wl-copy` and `xsel` users silently fail.
 
 ### L-2 — `get` appends a trailing newline to stdout [Certain]
-`output()` uses `console.log`, so `passly get token | consumer` receives `secret\n`. For API
+`output()` uses `console.log`, so `vaultly get token | consumer` receives `secret\n`. For API
 tokens/keys consumed exactly, the extra byte can break auth. (Clipboard path is fine — it copies
 the raw secret.) **Fix:** `process.stdout.write(secret)`; add newline only when attached to a TTY.
 
 ### L-3 — Remote URL is not validated (relies on git + arg-parser to stay safe) [Certain]
 `sync setup <url>` passes the URL straight to `git remote add`. Today two independent guards
-save you (git blocks `ext::`; `parseFlags` blocks `-`-prefixed URLs), but passly itself performs
+save you (git blocks `ext::`; `parseFlags` blocks `-`-prefixed URLs), but vaultly itself performs
 no validation — a future refactor of either guard, or a user with `protocol.ext.allow=always`,
 reopens a self-inflicted RCE. **Fix (defense in depth):** whitelist `https://`, `git@`,
 `ssh://`, `git://` and reject `ext::`/`fd::`/transport-helper schemes.
 
 ### L-4 — Env-var password usage is inherently leaky [Certain]
-Documented convenience, but `PASSLY_PASSWORD` lands in shell history and `/proc`. Keep it, but
+Documented convenience, but `VAULTLY_PASSWORD` lands in shell history and `/proc`. Keep it, but
 document the risk and prefer stdin piping in scripts.
 
 ### I-1 — In-memory secrets can't be zeroed [Certain, informational]
 Passwords/plaintext are JS strings — immutable, GC-retained, potentially swapped to disk. This is
-a Node limitation, not a passly bug; note it in the threat model. Using Buffers for plaintext
+a Node limitation, not a vaultly bug; note it in the threat model. Using Buffers for plaintext
 (see H-1) at least lets you `buf.fill(0)` after use.
 
 ---
